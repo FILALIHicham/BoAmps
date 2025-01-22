@@ -6,6 +6,78 @@ from config import (
     HASH_ALGORITHMS, CRYPTO_ALGORITHMS, CACHE_OPTIONS
 )
 
+def create_dynamic_section(section_name, fields_config, initial_count = 1, layout="row"):
+    # State management
+    count_state = gr.State(value=initial_count+1)
+    field_states = [gr.State([]) for _ in fields_config]
+    all_components = []
+
+    def update_fields(*states_and_values):
+        """Generic update function for multiple fields"""
+        # Split states and current values
+        states = list(states_and_values[:len(fields_config)])
+        current_values = states_and_values[len(fields_config):-1]
+        index = states_and_values[-1]
+
+        # Update each field's state
+        for field_idx, (state, value) in enumerate(zip(states, current_values)):
+            # Ensure state list is long enough
+            while len(state) <= index:
+                state.append("")
+            # Update the value at the correct index
+            state[index] = value if value is not None else ""
+
+        return tuple(states)
+
+    @gr.render(inputs=count_state)
+    def render_dynamic_section(count):
+        nonlocal all_components
+        all_components = []
+        
+        for i in range(count):
+            with (gr.Row() if layout == "row" else gr.Column()):
+                row_components = []
+                field_refs = []  # To store references to current row's components
+                
+                for field_idx, config in enumerate(fields_config):
+                    component = config["type"](
+                        label=f"{config['label']} {i + 1}",
+                        info=config.get("info", ""),
+                        **config.get("kwargs", {})
+                    )
+                    row_components.append(component)
+                    field_refs.append(component)  
+
+                    # Create change event with ALL current field values
+                    component.change(
+                        fn=update_fields,
+                        inputs=[*field_states, *field_refs, gr.State(i)],
+                        outputs=field_states
+                    )
+                
+                # Remove button
+                remove_btn = gr.Button("❌", variant="secondary")
+                remove_btn.click(
+                    lambda x, idx=i, fs=field_states: (
+                        max(0, x-1),
+                        *[fs[i].value[:idx] + fs[i].value[idx+1:] for i in range(len(fs))]
+                    ),
+                    inputs=count_state,
+                    outputs=[count_state, *field_states]
+                )
+                row_components.append(remove_btn)
+                
+                all_components.extend(row_components)
+        return all_components
+
+    # Initialize with initial count
+    render_dynamic_section(count=initial_count)
+    
+    add_btn = gr.Button(f"Add {section_name}")
+    add_btn.click(lambda x: x + 1, count_state, count_state)
+
+    return (count_state, *field_states, add_btn)
+
 def create_header_tab():
     """Create the header tab components."""
     with gr.Tab("Header"):
@@ -52,61 +124,24 @@ def create_task_tab():
             tuning_method = gr.Textbox(label="Tuning Method", info="(the method of hyperparameters tuning used (if any), example: gridSearch, randomizedSearch...)")
             
             with gr.Accordion("Hyperparameters"):
-                # State to track the number of hyperparameter rows
-                hyperparam_count = gr.State(value=1)
-                hyperparameter_names = gr.State([])  
-                hyperparameter_values = gr.State([])
-
-                # Function to update the hyperparameter states
-                def update_hyperparams(names, values, name_val, value_val, index):
-                    while len(names) <= index:
-                        names.append("")
-                    while len(values) <= index:
-                        values.append("")
-                        
-                    names[index] = name_val
-                    values[index] = value_val
-                    return names, values
-                
-                # Render function to dynamically update the hyperparameter rows
-                @gr.render(inputs=hyperparam_count)
-                def render_hyperparams(count):
-                    rows = []
-                    for i in range(count):
-                        with gr.Row():
-                            name = gr.Textbox(
-                                label=f"Hyperparameter Name {i + 1}",
-                                info="(the name of the hyperparameter, example: c, kernel, gamma, class_weight...)"
-                            )
-                            value = gr.Textbox(
-                                label=f"Hyperparameter Value {i + 1}",
-                                info="(the value of the hyperparameter, example: rbf, 1e-4, 10, linear...)"
-                            )
-                            name.change(
-                                fn=update_hyperparams,
-                                inputs=[hyperparameter_names, hyperparameter_values, name, value, gr.State(i)],
-                                outputs=[hyperparameter_names, hyperparameter_values]
-                            )
-                            value.change(
-                                fn=update_hyperparams,
-                                inputs=[hyperparameter_names, hyperparameter_values, name, value, gr.State(i)],
-                                outputs=[hyperparameter_names, hyperparameter_values]
-                            )
-                            remove_btn = gr.Button("❌", variant="secondary")
-                            remove_btn.click(
-                                lambda x, idx=i: x - 1 if idx < x else x,  # Decrement count if the index is valid
-                                hyperparam_count,  # Input is the current count
-                                hyperparam_count,  # Output is the updated count
-                            )
-                            rows.extend([name, value])
-                    return rows
-
-                # Update the state variables with the rendered components
-                render_hyperparams(count=0)  
-
-                # Add button to increment the hyperparameter count
-                add_btn = gr.Button("Add Hyperparameter")
-                add_btn.click(lambda x: x + 1, hyperparam_count, hyperparam_count)
+                _, hyperparameter_names, hyperparameter_values, add_btn = create_dynamic_section(
+                    section_name="Hyperparameter",
+                    fields_config=[
+                        {
+                            "type": gr.Textbox,
+                            "label": "Hyperparameter Name",
+                            "info": "(name of the hyperparameter)",
+                            "kwargs": {"interactive": True}
+                        },
+                        {
+                            "type": gr.Textbox,
+                            "label": "Hyperparameter Value",
+                            "info": "(value of the hyperparameter)",
+                            "kwargs": {"placeholder": "Enter value..."}
+                        }
+                    ],
+                    initial_count=0,
+                )
 
             quantization = gr.Textbox(label="Quantization", info="(the data weights (in bits) obtained thanks to the quantization, example: 2, 8, 16...)")
         
@@ -123,16 +158,48 @@ def create_task_tab():
             shape_item = gr.Textbox(label="Shape Item", info="(the shape of each dataset item)")
             
             with gr.Accordion("Inference Properties"):
-                nbRequest = gr.Textbox(label="Number of Requests", info="Required field<br>(the number of requests the measure corresponds to)")
-                nbTokensInput = gr.Textbox(label="Number of Tokens Input", info="(the number of tokens in the input)")
-                nbWordsInput = gr.Textbox(label="Number of Words Input", info="(the number of words in the input)")
-                nbTokensOutput = gr.Textbox(label="Number of Tokens Output", info="(the number of tokens in the output)")
-                nbWordsOutput = gr.Textbox(label="Number of Words Output", info="(the number of words in the output)")
-                contextWindowSize = gr.Textbox(label="Context Window Size", info="(the number of tokens kept in memory)")
-                cache = gr.Dropdown(value=None,
-                    label="Cache",
-                    choices=CACHE_OPTIONS,
-                    info="(the presence of a cache function)"
+                    _, nbRequest, nbTokensInput, nbWordsInput,  nbTokensOutput, nbWordsOutput, contextWindowSize, cache, add_inference_btn = create_dynamic_section(
+                    section_name="Inference Property",
+                    fields_config=[
+                        {
+                            "type": gr.Textbox,
+                            "label": "Number of Requests",
+                            "info": "Required field<br>(the number of requests the measure corresponds to)",
+                        },
+                        {
+                            "type": gr.Textbox,
+                            "label": "Number of Tokens Input",
+                            "info": "(the number of tokens in the input)",
+                        },
+                        {
+                            "type": gr.Textbox,
+                            "label": "Number of Words Input",
+                            "info": "(the number of words in the input)",
+                        },
+                        {
+                            "type": gr.Textbox,
+                            "label": "Number of Tokens Output",
+                            "info": "(the number of tokens in the output)",
+                        },
+                        {
+                            "type": gr.Textbox,
+                            "label": "Number of Words Output",
+                            "info": "(the number of words in the output)",
+                        },
+                        {
+                            "type": gr.Textbox,
+                            "label": "Context Window Size",
+                            "info": "(the number of tokens kept in memory)",
+                        },
+                        {
+                            "type": gr.Dropdown,
+                            "label": "Cache",
+                            "info": "(the presence of a cache function)",
+                            "kwargs": {"choices": CACHE_OPTIONS, "value": None}
+                        }
+                    ],
+                    initial_count=0,
+                    layout="column"
                 )
             
             source = gr.Textbox(label="Source", info="(the kind of source of the dataset)")

@@ -30,16 +30,27 @@ def generate_json(
     hashAlgorithm, cryptographicAlgorithm, value_hash
 ):
     """Generate JSON data from form inputs."""
-    # Process hyperparameter inputs
-    hyperparameters_values = []
-    
-    # Process the lists of values directly
+    # Process hyperparameters
+    hyperparameters = []
     for name, value in zip(hyperparameter_names, hyperparameter_values):
-        if name and value and str(name).strip() and str(value).strip():
-            hyperparameters_values.append({
-                "hyperparameterName": str(name).strip(),
-                "hyperparameterValue": str(value).strip()
+        if name and value:
+            hyperparameters.append({
+                "name": name,
+                "value": value
             })
+
+    # Process inference properties
+    inference_props_list = []
+    for i in range(len(nbRequest)):
+        inference_props_list.append({
+            "nbRequest": nbRequest[i],
+            "nbTokensInput": nbTokensInput[i],
+            "nbWordsInput": nbWordsInput[i],
+            "nbTokensOutput": nbTokensOutput[i],
+            "nbWordsOutput": nbWordsOutput[i],
+            "contextWindowSize": contextWindowSize[i],
+            "cache": cache[i]
+        })
     
     data = {
         "header": {
@@ -69,7 +80,7 @@ def generate_json(
                     "classPath": classPath,
                     "hyperparameters": {
                         "tuning_method": tuning_method,
-                        "values": hyperparameters_values
+                        "values": hyperparameters,
                     },
                     "quantization": quantization
                 }
@@ -86,19 +97,7 @@ def generate_json(
                             "item": shape_item
                         }
                     ],
-                    "inferenceProperties": [
-                        {
-                            "nbRequest": nbRequest,
-                            "parametersNLP": {
-                                "nbTokensInput": nbTokensInput,
-                                "nbWordsInput": nbWordsInput,
-                                "nbTokensOutput": nbTokensOutput,
-                                "nbWordsOutput": nbWordsOutput,
-                                "contextWindowSize": contextWindowSize,
-                                "cache": cache
-                            }
-                        }
-                    ],
+                    "inferenceProperties": inference_props_list,
                     "source": source,
                     "sourceUri": sourceUri,
                     "owner": owner

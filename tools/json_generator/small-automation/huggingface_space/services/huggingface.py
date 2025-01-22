@@ -37,10 +37,45 @@ def update_dataset(json_data):
 
 def create_flattened_data(data):
     """Create a flattened data structure for the dataset."""
-        # Handle hyperparameters
-    hyperparameters_values = data["task"]["algorithms"][0]["hyperparameters"]["values"]
-    hyperparameter_name = ", ".join([h["hyperparameterName"] for h in hyperparameters_values]) if hyperparameters_values else None
-    hyperparameter_value = ", ".join([str(h["hyperparameterValue"]) for h in hyperparameters_values]) if hyperparameters_values else None
+    # Handle hyperparameters
+    hyperparameters = data.get("task", {}).get("algorithms", [{}])[0].get("hyperparameters", {}).get("values", [])
+
+    # Process hyperparameters
+    hyperparameter_names = []
+    hyperparameter_values = []
+    for hp in hyperparameters:
+        if "name" in hp and "value" in hp:  # Match the keys used in JSON
+            hyperparameter_names.append(hp["name"])
+            hyperparameter_values.append(str(hp["value"]))
+
+    hyperparameter_name_str = ", ".join(hyperparameter_names) if hyperparameter_names else None
+    hyperparameter_value_str = ", ".join(hyperparameter_values) if hyperparameter_values else None
+
+    # Handle inference properties
+    inference_props = data.get("task", {}).get("dataset", [{}])[0].get("inferenceProperties", [])
+    print("Extracted inference properties:", inference_props)
+
+    # Process inference properties
+    inference_data = []
+    for props in inference_props:
+        if props:  
+            inference_data.append({
+                "nbRequest": props.get("nbRequest"),
+                "nbTokensInput": props.get("nbTokensInput"),
+                "nbWordsInput": props.get("nbWordsInput"),
+                "nbTokensOutput": props.get("nbTokensOutput"),
+                "nbWordsOutput": props.get("nbWordsOutput"),
+                "contextWindowSize": props.get("contextWindowSize"),
+                "cache": props.get("cache")
+            })
+
+    nbRequest_str = ", ".join([str(p["nbRequest"]) for p in inference_data if p.get("nbRequest")]) if inference_data else None
+    nbTokensInput_str = ", ".join([str(p["nbTokensInput"]) for p in inference_data if p.get("nbTokensInput")]) if inference_data else None
+    nbWordsInput_str = ", ".join([str(p["nbWordsInput"]) for p in inference_data if p.get("nbWordsInput")]) if inference_data else None
+    nbTokensOutput_str = ", ".join([str(p["nbTokensOutput"]) for p in inference_data if p.get("nbTokensOutput")]) if inference_data else None
+    nbWordsOutput_str = ", ".join([str(p["nbWordsOutput"]) for p in inference_data if p.get("nbWordsOutput")]) if inference_data else None
+    contextWindowSize_str = ", ".join([str(p["contextWindowSize"]) for p in inference_data if p.get("contextWindowSize")]) if inference_data else None
+    cache_str = ", ".join([str(p["cache"]) for p in inference_data if p.get("cache")]) if inference_data else None
     return {
         # Header
         "licensing": [data["header"]["licensing"]],
@@ -64,8 +99,8 @@ def create_flattened_data(data):
         "frameworkVersion": [data["task"]["algorithms"][0]["frameworkVersion"]],
         "classPath": [data["task"]["algorithms"][0]["classPath"]],
         "tuning_method": [data["task"]["algorithms"][0]["hyperparameters"]["tuning_method"]],
-        "hyperparameterName": [hyperparameter_name],
-        "hyperparameterValue": [hyperparameter_value],
+        "hyperparameterName": [hyperparameter_name_str],
+        "hyperparameterValue": [hyperparameter_value_str],
         "quantization": [data["task"]["algorithms"][0]["quantization"]],
         "dataType": [data["task"]["dataset"][0]["dataType"]],
         "fileType": [data["task"]["dataset"][0]["fileType"]],
@@ -73,13 +108,13 @@ def create_flattened_data(data):
         "volumeUnit": [data["task"]["dataset"][0]["volumeUnit"]],
         "items": [data["task"]["dataset"][0]["items"]],
         "shape_item": [data["task"]["dataset"][0]["shape"][0]["item"]],
-        "nbRequest": [data["task"]["dataset"][0]["inferenceProperties"][0]["nbRequest"]],
-        "nbTokensInput": [data["task"]["dataset"][0]["inferenceProperties"][0]["parametersNLP"]["nbTokensInput"]],
-        "nbWordsInput": [data["task"]["dataset"][0]["inferenceProperties"][0]["parametersNLP"]["nbWordsInput"]],
-        "nbTokensOutput": [data["task"]["dataset"][0]["inferenceProperties"][0]["parametersNLP"]["nbTokensOutput"]],
-        "nbWordsOutput": [data["task"]["dataset"][0]["inferenceProperties"][0]["parametersNLP"]["nbWordsOutput"]],
-        "contextWindowSize": [data["task"]["dataset"][0]["inferenceProperties"][0]["parametersNLP"]["contextWindowSize"]],
-        "cache": [data["task"]["dataset"][0]["inferenceProperties"][0]["parametersNLP"]["cache"]],
+        "nbRequest": [nbRequest_str],
+        "nbTokensInput": [nbTokensInput_str],
+        "nbWordsInput": [nbWordsInput_str],
+        "nbTokensOutput": [nbTokensOutput_str],
+        "nbWordsOutput": [nbWordsOutput_str],
+        "contextWindowSize": [contextWindowSize_str],
+        "cache": [cache_str],
         "source": [data["task"]["dataset"][0]["source"]],
         "sourceUri": [data["task"]["dataset"][0]["sourceUri"]],
         "owner": [data["task"]["dataset"][0]["owner"]],
