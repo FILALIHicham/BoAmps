@@ -54,11 +54,13 @@ def create_task_tab():
             with gr.Accordion("Hyperparameters"):
                 # State to track the number of hyperparameter rows
                 hyperparam_count = gr.State(value=1)
-                hyperparameter_names = gr.State([])  
+                hyperparameter_names = gr.State([])  # Store actual values
                 hyperparameter_values = gr.State([])
 
                 # Function to update the hyperparameter states
                 def update_hyperparams(names, values, name_val, value_val, index):
+                    print(f"Updating hyperparams at index {index}")
+                    # Extend lists if needed
                     while len(names) <= index:
                         names.append("")
                     while len(values) <= index:
@@ -82,6 +84,7 @@ def create_task_tab():
                                 label=f"Hyperparameter Value {i + 1}",
                                 info="(the value of the hyperparameter, example: rbf, 1e-4, 10, linear...)"
                             )
+                                            # Update state when values change
                             name.change(
                                 fn=update_hyperparams,
                                 inputs=[hyperparameter_names, hyperparameter_values, name, value, gr.State(i)],
@@ -93,6 +96,7 @@ def create_task_tab():
                                 outputs=[hyperparameter_names, hyperparameter_values]
                             )
                             remove_btn = gr.Button("❌", variant="secondary")
+                            # Define the remove button's click event
                             remove_btn.click(
                                 lambda x, idx=i: x - 1 if idx < x else x,  # Decrement count if the index is valid
                                 hyperparam_count,  # Input is the current count
@@ -102,7 +106,7 @@ def create_task_tab():
                     return rows
 
                 # Update the state variables with the rendered components
-                render_hyperparams(count=0)  
+                render_hyperparams(count=0)  # Initialize with one row
 
                 # Add button to increment the hyperparameter count
                 add_btn = gr.Button("Add Hyperparameter")

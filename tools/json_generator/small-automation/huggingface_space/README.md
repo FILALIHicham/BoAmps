@@ -85,6 +85,6 @@ git push
 - datasets
 - python>=3.7
 
-## ## Authors
+## Authors
 
 This gradio app for huggingface was initially coded by [Hicham Filali](https://github.com/FILALIHicham) but there is still room for improvement, Contributions are welcome!

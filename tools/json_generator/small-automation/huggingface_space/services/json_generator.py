@@ -9,7 +9,7 @@ def generate_json(
     publisher_name, publisher_division, publisher_projectName, publisher_confidentialityLevel, publisher_publicKey,
     # Task
     taskType, taskFamily, taskStage, algorithmName, framework, frameworkVersion, classPath, tuning_method,
-    hyperparameterName, hyperparameterValue, quantization, dataType, fileType, volume, volumeUnit, items,
+    hyperparameter_names, hyperparameter_values, quantization, dataType, fileType, volume, volumeUnit, items,
     shape_item, nbRequest, nbTokensInput, nbWordsInput, nbTokensOutput, nbWordsOutput, contextWindowSize, cache,
     source, sourceUri, owner, measuredAccuracy, estimatedAccuracy,
     # Measures
@@ -30,6 +30,17 @@ def generate_json(
     hashAlgorithm, cryptographicAlgorithm, value_hash
 ):
     """Generate JSON data from form inputs."""
+    # Process hyperparameter inputs
+    hyperparameters_values = []
+    
+    # Process the lists of values directly
+    for name, value in zip(hyperparameter_names, hyperparameter_values):
+        if name and value and str(name).strip() and str(value).strip():
+            hyperparameters_values.append({
+                "hyperparameterName": str(name).strip(),
+                "hyperparameterValue": str(value).strip()
+            })
+    
     data = {
         "header": {
             "licensing": licensing,
@@ -58,12 +69,7 @@ def generate_json(
                     "classPath": classPath,
                     "hyperparameters": {
                         "tuning_method": tuning_method,
-                        "values": [
-                            {
-                                "hyperparameterName": hyperparameterName,
-                                "hyperparameterValue": hyperparameterValue
-                            }
-                        ]
+                        "values": hyperparameters_values
                     },
                     "quantization": quantization
                 }

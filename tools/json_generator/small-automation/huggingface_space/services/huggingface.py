@@ -37,6 +37,10 @@ def update_dataset(json_data):
 
 def create_flattened_data(data):
     """Create a flattened data structure for the dataset."""
+        # Handle hyperparameters
+    hyperparameters_values = data["task"]["algorithms"][0]["hyperparameters"]["values"]
+    hyperparameter_name = ", ".join([h["hyperparameterName"] for h in hyperparameters_values]) if hyperparameters_values else None
+    hyperparameter_value = ", ".join([str(h["hyperparameterValue"]) for h in hyperparameters_values]) if hyperparameters_values else None
     return {
         # Header
         "licensing": [data["header"]["licensing"]],
@@ -60,8 +64,8 @@ def create_flattened_data(data):
         "frameworkVersion": [data["task"]["algorithms"][0]["frameworkVersion"]],
         "classPath": [data["task"]["algorithms"][0]["classPath"]],
         "tuning_method": [data["task"]["algorithms"][0]["hyperparameters"]["tuning_method"]],
-        "hyperparameterName": [data["task"]["algorithms"][0]["hyperparameters"]["values"][0]["hyperparameterName"]],
-        "hyperparameterValue": [data["task"]["algorithms"][0]["hyperparameters"]["values"][0]["hyperparameterValue"]],
+        "hyperparameterName": [hyperparameter_name],
+        "hyperparameterValue": [hyperparameter_value],
         "quantization": [data["task"]["algorithms"][0]["quantization"]],
         "dataType": [data["task"]["dataset"][0]["dataType"]],
         "fileType": [data["task"]["dataset"][0]["fileType"]],
