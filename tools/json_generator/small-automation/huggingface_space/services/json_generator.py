@@ -32,24 +32,39 @@ def generate_json(
     """Generate JSON data from form inputs."""
     # Process hyperparameters
     hyperparameters = []
-    for name, value in zip(hyperparameter_names, hyperparameter_values):
-        if name and value:
-            hyperparameters.append({
-                "name": name,
-                "value": value
-            })
-
+    max_length = max(len(hyperparameter_names), len(hyperparameter_values))
+    for i in range(max_length):
+        hyperparameters.append({
+            "name": hyperparameter_names[i] if i < len(hyperparameter_names) and hyperparameter_names[i] else "",
+            "value": hyperparameter_values[i] if i < len(hyperparameter_values) and hyperparameter_values[i] else ""
+        })
+        
     # Process inference properties
     inference_props_list = []
-    for i in range(len(nbRequest)):
+    max_length = max(len(nbRequest), len(nbTokensInput), len(nbWordsInput), len(nbTokensOutput), len(nbWordsOutput), len(contextWindowSize), len(cache))
+    for i in range(max_length):
         inference_props_list.append({
-            "nbRequest": nbRequest[i],
-            "nbTokensInput": nbTokensInput[i],
-            "nbWordsInput": nbWordsInput[i],
-            "nbTokensOutput": nbTokensOutput[i],
-            "nbWordsOutput": nbWordsOutput[i],
-            "contextWindowSize": contextWindowSize[i],
-            "cache": cache[i]
+            "nbRequest": nbRequest[i] if i < len(nbRequest) and nbRequest[i] else "",
+            "nbTokensInput": nbTokensInput[i] if i < len(nbTokensInput) and nbTokensInput[i] else "",
+            "nbWordsInput": nbWordsInput[i] if i < len(nbWordsInput) and nbWordsInput[i] else "",
+            "nbTokensOutput": nbTokensOutput[i] if i < len(nbTokensOutput) and nbTokensOutput[i] else "",
+            "nbWordsOutput": nbWordsOutput[i] if i < len(nbWordsOutput) and nbWordsOutput[i] else "",
+            "contextWindowSize": contextWindowSize[i] if i < len(contextWindowSize) and contextWindowSize[i] else "",
+            "cache": cache[i] if i < len(cache) and cache[i] else ""
+        })
+
+    # Process components
+    components_list = []
+    max_length = max(len(componentName), len(nbComponent), len(memorySize), len(manufacturer_infra), len(family), len(series), len(share))
+    for i in range(max_length):
+        components_list.append({
+            "componentName": componentName[i] if i < len(componentName) and componentName[i] else "",
+            "nbComponent": nbComponent[i] if i < len(nbComponent) and nbComponent[i] else "",
+            "memorySize": memorySize[i] if i < len(memorySize) and memorySize[i] else "",
+            "manufacturer": manufacturer_infra[i] if i < len(manufacturer_infra) and manufacturer_infra[i] else "",
+            "family": family[i] if i < len(family) and family[i] else "",
+            "series": series[i] if i < len(series) and series[i] else "",
+            "share": share[i] if i < len(share) and share[i] else ""
         })
     
     data = {
@@ -137,17 +152,7 @@ def generate_json(
             "infraType": infraType,
             "cloudProvider": cloudProvider,
             "cloudInstance": cloudInstance,
-            "components": [
-                {
-                    "componentName": componentName,
-                    "nbComponent": nbComponent,
-                    "memorySize": memorySize,
-                    "manufacturer": manufacturer_infra,
-                    "family": family,
-                    "series": series,
-                    "share": share
-                }
-            ]
+            "components": components_list
         },
         "environment": {
             "country": country,
@@ -162,7 +167,7 @@ def generate_json(
         "$hash": {
             "hashAlgorithm": hashAlgorithm,
             "cryptographicAlgorithm": cryptographicAlgorithm,
-            "value": value_hash
+            "ecryptedValue": value_hash
         }
     }
 

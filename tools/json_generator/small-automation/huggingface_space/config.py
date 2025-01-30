@@ -10,7 +10,7 @@ OBLIGATORY_FIELDS = [
     "taskType", "taskFamily", "taskStage", "algorithmName", "dataType",
     "volume", "volumeUnit", "nbRequest", "measurementMethod", "unit",
     "powerConsumption", "os", "language", "infraType", "componentName",
-    "nbComponent", "country", "hashAlgorithm", "cryptographicAlgorithm", "value"
+    "nbComponent", "country", "hashAlgorithm", "cryptographicAlgorithm", "ecryptedValue"
 ]
 
 # Dropdown Options

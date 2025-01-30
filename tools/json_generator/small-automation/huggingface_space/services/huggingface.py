@@ -53,7 +53,6 @@ def create_flattened_data(data):
 
     # Handle inference properties
     inference_props = data.get("task", {}).get("dataset", [{}])[0].get("inferenceProperties", [])
-    print("Extracted inference properties:", inference_props)
 
     # Process inference properties
     inference_data = []
@@ -76,6 +75,30 @@ def create_flattened_data(data):
     nbWordsOutput_str = ", ".join([str(p["nbWordsOutput"]) for p in inference_data if p.get("nbWordsOutput")]) if inference_data else None
     contextWindowSize_str = ", ".join([str(p["contextWindowSize"]) for p in inference_data if p.get("contextWindowSize")]) if inference_data else None
     cache_str = ", ".join([str(p["cache"]) for p in inference_data if p.get("cache")]) if inference_data else None
+
+    # Handle components
+    components = data.get("infrastructure", {}).get("components", [])
+    component_data = []
+    for comp in components:
+        if comp:  
+            component_data.append({
+                "componentName": comp.get("componentName"),
+                "nbComponent": comp.get("nbComponent"),
+                "memorySize": comp.get("memorySize"),
+                "manufacturer": comp.get("manufacturer"),
+                "family": comp.get("family"),
+                "series": comp.get("series"),
+                "share": comp.get("share")
+            })
+
+    componentName_str = ", ".join([str(p["componentName"]) for p in component_data if p.get("componentName")]) if component_data else None
+    nbComponent_str = ", ".join([str(p["nbComponent"]) for p in component_data if p.get("nbComponent")]) if component_data else None
+    memorySize_str = ", ".join([str(p["memorySize"]) for p in component_data if p.get("memorySize")]) if component_data else None
+    manufacturer_infra_str = ", ".join([str(p["manufacturer"]) for p in component_data if p.get("manufacturer")]) if component_data else None
+    family_str = ", ".join([str(p["family"]) for p in component_data if p.get("family")]) if component_data else None
+    series_str = ", ".join([str(p["series"]) for p in component_data if p.get("series")]) if component_data else None
+    share_str = ", ".join([str(p["share"]) for p in component_data if p.get("share")]) if component_data else None
+
     return {
         # Header
         "licensing": [data["header"]["licensing"]],
@@ -150,13 +173,13 @@ def create_flattened_data(data):
         "infraType": [data["infrastructure"]["infraType"]],
         "cloudProvider": [data["infrastructure"]["cloudProvider"]],
         "cloudInstance": [data["infrastructure"]["cloudInstance"]],
-        "componentName": [data["infrastructure"]["components"][0]["componentName"]],
-        "nbComponent": [data["infrastructure"]["components"][0]["nbComponent"]],
-        "memorySize": [data["infrastructure"]["components"][0]["memorySize"]],
-        "manufacturer_infra": [data["infrastructure"]["components"][0]["manufacturer"]],
-        "family": [data["infrastructure"]["components"][0]["family"]],
-        "series": [data["infrastructure"]["components"][0]["series"]],
-        "share": [data["infrastructure"]["components"][0]["share"]],
+        "componentName": [componentName_str],
+        "nbComponent": [nbComponent_str],
+        "memorySize": [memorySize_str],
+        "manufacturer_infra": [manufacturer_infra_str],
+        "family": [family_str],
+        "series": [series_str],
+        "share": [share_str],
         
         # Environment
         "country": [data["environment"]["country"]],
@@ -173,5 +196,5 @@ def create_flattened_data(data):
         # Hash
         "hashAlgorithm": [data["$hash"]["hashAlgorithm"]],
         "cryptographicAlgorithm": [data["$hash"]["cryptographicAlgorithm"]],
-        "value": [data["$hash"]["value"]]
+        "value": [data["$hash"]["ecryptedValue"]]
     }

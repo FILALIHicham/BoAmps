@@ -280,13 +280,49 @@ def create_infrastructure_tab():
         )
         cloudProvider = gr.Textbox(label="Cloud Provider", info="(name of your cloud provider)")
         cloudInstance = gr.Textbox(label="Cloud Instance", info="(name of your cloud instance)")
-        componentName = gr.Textbox(label="Component Name", info="Required field<br>(type of subsystem part)")
-        nbComponent = gr.Textbox(label="Number of Components", info="Required field<br>(number of items of this component)")
-        memorySize = gr.Textbox(label="Memory Size", info="(size of memory in Gbytes)")
-        manufacturer_infra = gr.Textbox(label="Manufacturer", info="(name of the manufacturer)")
-        family = gr.Textbox(label="Family", info="(family of this component)")
-        series = gr.Textbox(label="Series", info="(series of this component)")
-        share = gr.Textbox(label="Share", info="(percentage of equipment used)")
+        with gr.Accordion("Components"):
+            _, componentName, nbComponent, memorySize, manufacturer_infra, family, series, share, add_component_btn = create_dynamic_section(
+                section_name="Component",
+                fields_config=[
+                    {
+                        "type": gr.Textbox,
+                        "label": "Component Name",
+                        "info": "Required field<br>(type of subsystem part)",
+                    },
+                    {
+                        "type": gr.Textbox,
+                        "label": "Number of Components",
+                        "info": "Required field<br>(number of items of this component)",
+                    },
+                    {
+                        "type": gr.Textbox,
+                        "label": "Memory Size",
+                        "info": "(size of memory in Gbytes)",
+                    },
+                    {
+                        "type": gr.Textbox,
+                        "label": "Manufacturer",
+                        "info": "(name of the manufacturer)",
+                    },
+                    {
+                        "type": gr.Textbox,
+                        "label": "Family",
+                        "info": "(family of this component)",
+                    },
+                    {
+                        "type": gr.Textbox,
+                        "label": "Series",
+                        "info": "(series of this component)",
+                    },
+                    {
+                        "type": gr.Textbox,
+                        "label": "Share",
+                        "info": "(percentage of equipment used)",
+                    }
+                ],
+                initial_count=0,
+                layout="column"
+            )
         
         return [
             infraType, cloudProvider, cloudInstance, componentName,
