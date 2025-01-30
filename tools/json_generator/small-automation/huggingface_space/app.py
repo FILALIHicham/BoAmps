@@ -16,6 +16,17 @@ from ui.form_components import (
 # Initialize Hugging Face
 init_huggingface()
 
+def handle_submit(*inputs):
+    message, file_output, json_output = generate_json(*inputs)
+    
+    # Check if the message indicates validation failure
+    if message.startswith("The following fields are required"):
+        return message, file_output, json_output
+    
+    # If validation passed, proceed to update_dataset
+    update_output = update_dataset(json_output)
+    return update_output, file_output, json_output
+
 # Create Gradio interface
 with gr.Blocks() as demo:
     gr.Markdown("## Data Collection Form")
@@ -40,7 +51,7 @@ with gr.Blocks() as demo:
 
     # Event Handlers
     submit_button.click(
-        generate_json,
+        handle_submit,  
         inputs=[
             *header_components,
             *task_components,
@@ -53,10 +64,6 @@ with gr.Blocks() as demo:
             *hash_components
         ],
         outputs=[output, file_output, json_output]
-    ).then(
-        update_dataset,
-        inputs=json_output,
-        outputs=output
     )
 
 if __name__ == "__main__":
